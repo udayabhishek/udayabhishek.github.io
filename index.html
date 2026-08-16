@@ -9,7 +9,7 @@
 </head>
 <body id="top">
 
-<header class="site-nav">
+<header class="site-nav sticky-nav">
   <a class="logo" href="#top">UA</a>
   <nav aria-label="Main navigation">
     <a href="#about">About</a>
@@ -320,6 +320,42 @@
   <span>Uday Abhishek · Senior iOS Engineer · Bengaluru, India</span>
   <a href="#top">Back to top ↑</a>
 </footer>
+
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const navLinks = [...document.querySelectorAll('.site-nav nav a[href^="#"]')];
+  const sections = navLinks
+    .map(link => document.querySelector(link.getAttribute("href")))
+    .filter(Boolean);
+
+  function updateActiveNav() {
+    const offset = 150;
+    let current = sections[0]?.id || "";
+
+    for (const section of sections) {
+      const top = section.getBoundingClientRect().top;
+      if (top <= offset) {
+        current = section.id;
+      }
+    }
+
+    navLinks.forEach(link => {
+      const isActive = link.getAttribute("href") === "#" + current;
+      link.classList.toggle("active", isActive);
+      if (isActive) {
+        link.setAttribute("aria-current", "page");
+      } else {
+        link.removeAttribute("aria-current");
+      }
+    });
+  }
+
+  window.addEventListener("scroll", updateActiveNav, { passive: true });
+  window.addEventListener("resize", updateActiveNav);
+  updateActiveNav();
+});
+</script>
 
 </body>
 </html>
