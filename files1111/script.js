@@ -31,9 +31,13 @@
   function setActive() {
     var scrollPos = window.scrollY + 120;
     var current = null;
+    var currentTop = -Infinity;
 
     sections.forEach(function (sec) {
-      if (sec.offsetTop <= scrollPos) current = sec;
+      if (sec.offsetTop <= scrollPos && sec.offsetTop > currentTop) {
+        current = sec;
+        currentTop = sec.offsetTop;
+      }
     });
 
     navAnchors.forEach(function (a) {
@@ -73,5 +77,57 @@
     revealEls.forEach(function (el) { observer.observe(el); });
   } else {
     revealEls.forEach(function (el) { el.classList.add("in-view"); });
+  }
+
+  /* -------- Count-up numbers -------- */
+  var countEls = document.querySelectorAll(".count-up");
+  var prefersReducedMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  function animateCount(el) {
+    var target = parseFloat(el.getAttribute("data-count")) || 0;
+    var decimals = parseInt(el.getAttribute("data-decimals"), 10) || 0;
+
+    if (prefersReducedMotion) {
+      el.textContent = target.toFixed(decimals);
+      return;
+    }
+
+    var duration = 1100;
+    var start = null;
+
+    function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
+
+    function step(timestamp) {
+      if (start === null) start = timestamp;
+      var progress = Math.min((timestamp - start) / duration, 1);
+      var eased = easeOutCubic(progress);
+      var current = target * eased;
+      el.textContent = current.toFixed(decimals);
+      if (progress < 1) {
+        window.requestAnimationFrame(step);
+      } else {
+        el.textContent = target.toFixed(decimals);
+      }
+    }
+
+    window.requestAnimationFrame(step);
+  }
+
+  if ("IntersectionObserver" in window && countEls.length) {
+    var countObserver = new IntersectionObserver(
+      function (entries) {
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting) {
+            animateCount(entry.target);
+            countObserver.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.4 }
+    );
+
+    countEls.forEach(function (el) { countObserver.observe(el); });
+  } else {
+    countEls.forEach(function (el) { el.textContent = el.getAttribute("data-count"); });
   }
 })();
